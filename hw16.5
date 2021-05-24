@@ -1,0 +1,58 @@
+import pandas as pd
+import numpy as np
+
+from sklearn.datasets import make_circles
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, plot_roc_curve
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+np.random.seed(17)
+
+N = 10000
+X1 = np.random.normal(loc=0, size=(N, 2))
+X2 = np.random.normal(loc=10, size=(N, 2))
+
+X = np.vstack([X1, X2])
+y = np.array([0]*N + [1]*N)
+
+sns.scatterplot(x=X[:, 0], y=X[:, 1], hue=y)
+
+for C in [0.01, 100]:
+    model = SVC(kernel="linear", C=C)
+    model.fit(X, y)
+
+    w = model.coef_[0]
+    b = model.intercept_[0]
+    
+    xx = np.array([np.min(X[:, 0]), np.max(X[:, 0])])
+    yy = (-w[0] * xx - b) / w[1]
+    plt.plot(xx, yy)
+
+plt.savefig("test.pdf", dpi=300)
+plt.close()
+
+X1 = np.random.normal(loc=0, size=(N, 2))
+X2 = np.random.normal(loc=0, size=(N, 2))
+
+X = np.vstack([X1, X2])
+y = np.array([0]*N + [1]*N)
+
+sns.scatterplot(x=X[:, 0], y=X[:, 1], hue=y)
+
+for C in [0.01, 100]:
+    model = SVC(kernel="linear", C=C)
+    model.fit(X, y) # эта строка выполняется дольше всех
+
+    w = model.coef_[0]
+    b = model.intercept_[0]
+    
+    xx = np.array([np.min(X[:, 0]), np.max(X[:, 0])])
+    yy = (-w[0] * xx - b) / w[1]
+    plt.plot(xx, yy)
+
+plt.savefig("test2.pdf", dpi=300)
+plt.close()
