@@ -1,0 +1,100 @@
+import pandas as pd
+import numpy as np
+
+from sklearn.datasets import make_circles
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, plot_roc_curve
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+df = pd.read_csv("BRCA_pam50.tsv", sep="\t", index_col=0)
+# Для 50 генов
+X = df.iloc[:, :-1].to_numpy()
+y = df["Subtype"].to_numpy()
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, random_state=17)
+model = SVC(kernel="linear")
+model.fit(X_train, y_train) 
+y_pred = model.predict(X_test) 
+
+print('Общая точность классификации для 50 генов=', accuracy_score(y_test, y_pred))
+
+M = confusion_matrix(y_test, y_pred)
+print('Матрица для 50 генов:')
+print(M)
+TPR = M[0, 0] / (M[0, 0] + M[0, 1])
+TNR = M[1, 1] / (M[1, 0] + M[1, 1])
+print('TPR (sensivity) для 50 генов=', TPR)
+print('TNR (specificity) для 50 генов=', TNR)
+
+# Для первых 2 главных компонент
+
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+# Стандартизация данных
+X = df.iloc[:, :-1].values
+y = df.loc[:,["Subtype"]].values
+X = StandardScaler().fit_transform(X)
+
+pca = PCA(n_components=2)
+principalComponents = pca.fit_transform(X)
+
+principalDf = pd.DataFrame(data = principalComponents , columns = ['principal component 1',
+                                                                   'principal component 2'])
+principalDf['Subtype'] = y # К созданному датафрейму со значениями добавили столбец субтипы и заполнили значениями
+print(principalDf)
+# Обучили линейный SVM для 2х компонент
+X = principalDf.iloc[:, :-1].to_numpy()
+y = principalDf["Subtype"].to_numpy()
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, random_state=17)
+model = SVC(kernel="linear")
+model.fit(X_train, y_train) 
+y_pred = model.predict(X_test) 
+
+print('Общая точность классификации для 2х компонент=', accuracy_score(y_test, y_pred))
+
+M = confusion_matrix(y_test, y_pred)
+print('Матрица для 2х компонент:')
+print(M)
+TPR = M[0, 0] / (M[0, 0] + M[0, 1])
+TNR = M[1, 1] / (M[1, 0] + M[1, 1])
+print('TPR (sensivity) для 2х компонент=', TPR)
+print('TNR (specificity) для 2х компонент=', TNR)
+
+Матрица для 50 генов:
+[[15  0  0  1  0  0]
+ [ 0 25  0  0  0  0]
+ [ 0  0 98  5  0  0]
+ [ 0  0  9 37  0  0]
+ [ 0  1  3  0  0  1]
+ [ 0  0  0  0  0 34]]
+TPR (sensivity) для 50 генов= 1.0
+TNR (specificity) для 50 генов= 1.0
+     principal component 1  principal component 2      Subtype
+0                -1.491239               7.784973  Normal-like
+1                -2.882382              -0.421237    Luminal A
+2                -0.302641              -0.317554    Luminal A
+3                -2.159053              -0.174444    Luminal A
+4                -3.083715              -2.284481    Luminal A
+..                     ...                    ...          ...
+910              -5.524686               4.718383      Healthy
+911              -5.682379               5.826429      Healthy
+912              -6.916553               4.233470      Healthy
+913              -6.875373               5.283752      Healthy
+914              -7.750099               5.181696      Healthy
+
+[915 rows x 3 columns]
+Общая точность классификации для 2х компонент= 0.8209606986899564
+Матрица для 2х компонент:
+[[ 5  0  1 10  0  0]
+ [ 0 24  1  0  0  0]
+ [ 0  0 97  6  0  0]
+ [ 2  0 16 28  0  0]
+ [ 1  1  3  0  0  0]
+ [ 0  0  0  0  0 34]]
+TPR (sensivity) для 2х компонент= 1.0
+TNR (specificity) для 2х компонент= 1.0
