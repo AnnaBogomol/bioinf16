@@ -1,34 +1,35 @@
 import pandas as pd
 import numpy as np
-
+ 
 from sklearn.datasets import make_circles
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, plot_roc_curve
-
+ 
 import seaborn as sns
 import matplotlib.pyplot as plt
-
+from sklearn.linear_model import LogisticRegression
+ 
 df = pd.read_csv("BRCA_pam50.tsv", sep="\t", index_col=0)
 df1 = df.loc[df["Subtype"].isin(["Luminal A", "Luminal B"])]
 X = df1.iloc[:, :-1].to_numpy()
 y = df1["Subtype"].to_numpy()
-
+ 
 X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, random_state=17)
 model = SVC(kernel="linear")
 model.fit(X_train, y_train) 
 y_pred = model.predict(X_test) 
-
+ 
 print('Общая точность классификации для 50 генов=', accuracy_score(y_test, y_pred))
-
+ 
 M = confusion_matrix(y_test, y_pred)
 print(M)
 TPR = M[0, 0] / (M[0, 0] + M[0, 1])
 TNR = M[1, 1] / (M[1, 0] + M[1, 1])
 print('TPR (sensivity) для 50 генов=', TPR)
 print('TNR (specificity) для 50 генов=', TNR)
-
+ 
 plot_roc_curve(model, X_test, y_test)
 plt.plot(1 - TPR, TNR, "x", c="red")
 plt.savefig("ROCK_AUC50.pdf", dpi=300)
@@ -39,40 +40,55 @@ plt.close()
  [ 6 40]]
 TPR (sensivity) для 50 генов= 0.941747572815534
 TNR (specificity) для 50 генов= 0.8695652173913043
-
-# Отсортировали датафрейм по максимальным значениям гена
-df_genes = df.iloc[:, :-1]
-df_max = pd.DataFrame(data=df_genes.max(), columns=['Max'])
-df_sorted = df_max.sort_values('Max', ascending=False)
-print(df_sorted)
-# Увидели, что первые 5 генов это SLC39A6, KRT5, KRT14, ERBB2, KRT17
-# Обучили на них SVM
-
-df1 = df.loc[df["Subtype"].isin(["Luminal A", "Luminal B"]), ["SLC39A6", "KRT5", "KRT14", "ERBB2", "KRT17","Subtype"]]
+ 
+coeff = model.coef_
+coeff = list(coeff.flat)
+coeff = sorted(coeff)
+cf = coeff
+coeff = coeff[-5:]
+print(coeff)
+s = []
+# [0.9538068210290267, 1.2809722896233469, 1.4655136717504726, 1.649488577599059, 1.9104724352959073]
+for i in range(50):
+    if cf[i] == 0.9538068210290267:
+        s.append(i)
+    elif cf[i] == 1.2809722896233469:
+        s.append(i)
+    elif cf[i] == 1.4655136717504726:
+        s.append(i)
+    elif cf[i] == 1.649488577599059:
+        s.append(i)
+    elif cf[i] == 1.9104724352959073:
+        s.append(i)
+#[0, 1, 27, 29, 34]
+cols = df.columns
+print(cols[0],cols[1],cols[27],cols[29], cols[34])
+ 
+df1 = df.loc[df["Subtype"].isin(["Luminal A", "Luminal B"]), ['UBE2T', 'BIRC5', 'MIA', 'FOXC1','BAG1','Subtype']]
 X = df1.iloc[:, :-1].to_numpy()
 y = df1["Subtype"].to_numpy()
-
+ 
 X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, random_state=17)
 model = SVC(kernel="linear")
 model.fit(X_train, y_train) 
 y_pred = model.predict(X_test) 
-
+ 
 print('Общая точность классификации для 5 генов=', accuracy_score(y_test, y_pred))
-
+ 
 M = confusion_matrix(y_test, y_pred)
 print(M)
 TPR = M[0, 0] / (M[0, 0] + M[0, 1])
 TNR = M[1, 1] / (M[1, 0] + M[1, 1])
 print('TPR (sensivity) для 5 генов=', TPR)
 print('TNR (specificity) для 5 генов=', TNR)
-
+ 
 plot_roc_curve(model, X_test, y_test)
 plt.plot(1 - TPR, TNR, "x", c="red")
 plt.savefig("ROCK_AUC5.pdf", dpi=300)
 plt.close()
 # Результат:
-Общая точность классификации для 5 генов= 0.6577181208053692
-[[80 23]
- [28 18]]
-TPR (sensivity) для 5 генов= 0.7766990291262136
-TNR (specificity) для 5 генов= 0.391304347826087
+Общая точность классификации для 5 генов= 0.8926174496644296
+[[97  6]
+ [10 36]]
+TPR (sensivity) для 5 генов= 0.941747572815534
+TNR (specificity) для 5 генов= 0.782608695652174
